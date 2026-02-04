@@ -1,58 +1,127 @@
 ﻿using AICrawler.app;
+using AICrawler.App;
 using Microsoft.Extensions.Configuration;
 
-var projectFolder = "/Users/timslager/git/ShortUrl";
-
-var builder = new ConfigurationBuilder()
+var config = new ConfigurationBuilder()
     .SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json", optional: false);
+    .AddJsonFile("appsettings.json", optional: false)
+    .Build();
 
-var config = builder.Build();
+var projectFolder = config["projectPath"] 
+                    ?? throw new Exception("projectPath missing in config");
 
-var key = config["openAi:key"];
+var key = config["openAiKey"]
+          ?? throw new Exception("openAiKey missing in config");
 
-var _agent = new Agent(key);
+var agent = new Agent(key);
 
-var excludeFolders = new List<string>
+var dirInfo = new DirectoryInfo(projectFolder);
+
+//TODO: Improve performance. Perhaps by using the same technique as in GetProjectFilesToProcessAsync
+var dirInfoFiles = dirInfo.EnumerateFiles("*", SearchOption.AllDirectories);
+
+// first determine if projectRoot even exists, is accessible, is a directory and not empty
+if (!dirInfo.Exists)
 {
-    "bin",
-    "obj",
-    ".git",
-    ".vs",
-    "node_modules",
-    "vendor",
-    "packages",
-    "node_modules",
-    "dist",
-    "build",
-    "out",
-    ".idea",
-    ".vscode",
-    "storage",
-    "cache"
-};
+    throw new DirectoryNotFoundException($"Project folder '{projectFolder}' does not exist");
+}
 
-// read project folder
-var projectFiles = Directory.GetFiles(projectFolder, "*.*", SearchOption.AllDirectories)
-    .Where(filePath => !excludeFolders.Any(excludeFolder => filePath.Split(Path.DirectorySeparatorChar).Contains(excludeFolder)))
-    .ToList();
-
-var folders = projectFiles.Select(
-    projectFile => projectFile.Replace(
-        projectFolder + Path.DirectorySeparatorChar, "")
-    )
-    .ToList();
-
-var result = await _agent.DecideFilesToProcess(folders);
-
-foreach (var file in result)
+if (!dirInfoFiles.Any())
 {
-    var actualFilePath = Path.Combine(projectFolder, file);
-    Console.WriteLine(actualFilePath);
-    var documentation = await _agent.GenerateDocumentation(actualFilePath);
-    
-    if (documentation != null)
+    throw new Exception($"Project folder '{projectFolder}' is empty");
+}
+
+var filesToProcess = await GetProjectFilesToProcessAsync(projectFolder, agent);
+
+foreach (var relativePath in filesToProcess)
+{
+    var fullPath = Path.Combine(projectFolder, relativePath);
+
+    var doc = await agent.GenerateDocumentation(fullPath);
+
+    await DocumentationService.SaveAsync(doc, projectFolder);
+}
+
+return;
+
+async Task<HashSet<string>> GetProjectFilesToProcessAsync(string root, Agent docAgent)
+{
+    var ignore = ReadDocUtilityFile(Path.Combine(root, ".docignore"));
+    var whitelist = ReadDocUtilityFile(Path.Combine(root, ".docwhitelist"));
+
+    // whitelist overrides everything
+    if (whitelist is { Count: > 0 })
     {
-        await _agent.SaveGeneratedDocumentation(documentation);
+        return whitelist;
     }
+
+    // apply ignore
+    if (ignore is { Count: > 0 })
+    {
+        return Directory
+            .EnumerateFiles(root, "*.*", SearchOption.AllDirectories)
+            .Select(path => Path.GetRelativePath(root, path))
+            .Where(path => !IsIgnored(path, ignore))
+            .ToHashSet();
+    }
+
+    var excludeFolders = new HashSet<string>
+    {
+        "bin","obj",".git",".vs","node_modules","vendor",
+        "packages","dist","build","out",".idea",".vscode",
+        "storage","cache"
+    };
+
+    var files = Directory
+        .EnumerateFiles(root, "*.*", SearchOption.AllDirectories)
+        .Where(path => !IsInExcludedFolder(path, excludeFolders))
+        .Select(path => Path.GetRelativePath(root, path))
+        .ToHashSet();
+    // let AI decide ones actually matter
+    return await docAgent.DecideFilesToProcess(files);
+}
+
+static bool IsInExcludedFolder(string path, HashSet<string> excluded) 
+{
+    var segments = path.Split(Path.DirectorySeparatorChar);
+    return segments.Any(excluded.Contains);
+}
+
+HashSet<string>? ReadDocUtilityFile(string path)
+{
+    if (!File.Exists(path))
+    {
+        return null;
+    }
+
+    return File.ReadLines(path)
+        .Select(l => l.Trim())
+        .Where(l => !string.IsNullOrEmpty(l) && !l.StartsWith("#"))
+        .ToHashSet();
+}
+
+static bool IsIgnored(string path, HashSet<string> ignoreRules)
+{
+    foreach (var rule in ignoreRules)
+    {
+        // folder rule
+        if (rule.EndsWith("/"))
+        {
+            if (path.StartsWith(rule, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        // simple glob rule
+        else if (rule.StartsWith("*."))
+        {
+            if (Path.GetExtension(path).Equals(rule[1..], StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        // exact file
+        else if (path.Equals(rule, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
