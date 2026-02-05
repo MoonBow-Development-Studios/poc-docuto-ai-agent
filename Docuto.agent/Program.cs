@@ -17,6 +17,7 @@ var key = config["openAiKey"]
 var model = config["model"];
 
 var agent = new Agent(key, model);
+var manifest = new ManifestService(projectFolder);
 
 var dirInfo = new DirectoryInfo(projectFolder);
 
@@ -40,10 +41,20 @@ foreach (var relativePath in filesToProcess)
 { 
     var fullPath = Path.Combine(projectFolder, relativePath);
     
+    if (!manifest.IsChanged(relativePath, fullPath))
+    {
+        Console.WriteLine($"[Skipping] Unchanged: {relativePath}");
+        continue;
+    }
+
+    Console.WriteLine($"[Processing] Generating docs for: {relativePath}");
     var doc = await agent.GenerateDocumentation(fullPath);
 
     await DocumentationService.SaveAsync(doc, projectFolder);
+    manifest.Update(relativePath, fullPath);
 }
+
+manifest.Save();
 
 return;
 

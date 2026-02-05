@@ -49,6 +49,14 @@ Documentation is written to:
 <projectPath>/docs/<original_file_path>.md
 ```
 
+## Features
+
+### Smart Caching
+The agent tracks file modifications using a manifest file (`docs/.docuto-manifest.json`).
+- **First Run**: Documents all selected files.
+- **Subsequent Runs**: Skips files that haven't changed since the last run.
+- **Force Update**: Delete the `.docuto-manifest.json` file to force a full re-generation.
+
 ## File Selection Rules
 The crawler supports optional file lists in the target project:
 - `.docwhitelist` (highest priority): explicit list of files to consider.
