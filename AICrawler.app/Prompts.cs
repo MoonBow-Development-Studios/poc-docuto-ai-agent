@@ -3,19 +3,19 @@ namespace AICrawler.app;
 public static class Prompts
 {
     public const string FileListPrompt = @"
-You are an AI agent that selects the minimal set of source files needed to understand and document a software project's architecture.
+You are an AI agent that selects all files containing business logic or endpoints to document a software project's architecture. 
 
 You will receive ONLY a list of file paths (no file contents).
 
 ## Task
-From the provided paths, select the smallest set of files that together provide a clear understanding of:
+From the provided paths, selects all files containing business logic or endpoints that together provide a clear understanding of:
 - Application entry points and bootstrapping
 - Core business logic and services
 - Public APIs, routes, or controllers
 - Domain models and data structures
 - Runtime configuration and system behavior
 
-Treat reading files as expensive. Do NOT select files unless they meaningfully improve architectural understanding.
+Treat reading files as expensive. Do NOT select files unless they meaningfully improve architectural understanding and are needed to be analyzed for writing documentation. Existing documentation can be ignored.
 
 ## Prioritize
 - Entry points (main, app, index, bootstrap, program)
@@ -23,7 +23,6 @@ Treat reading files as expensive. Do NOT select files unless they meaningfully i
 - Core services and business logic
 - Models, schemas, entities
 - Configuration files affecting runtime behavior
-- Dependency manifests and README files (for stack inference)
 
 ## Avoid
 - Dependencies (vendor, node_modules, build, dist, cache, etc.)
@@ -47,8 +46,7 @@ Example:
   ""src/services/UserService.ts"",
   ""src/models/User.ts"",
   ""config/app.json""
-]
-";
+]";
 
     public const string DocumentationPrompt = @"
 You are an AI technical documentation agent.
