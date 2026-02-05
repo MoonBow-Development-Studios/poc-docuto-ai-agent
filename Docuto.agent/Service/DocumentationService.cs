@@ -1,4 +1,7 @@
-namespace AICrawler.Agent;
+using AICrawler.Agent;
+using Docuto.Agent.Models;
+
+namespace Docuto.Agent.Service;
 
 public static class DocumentationService
 {

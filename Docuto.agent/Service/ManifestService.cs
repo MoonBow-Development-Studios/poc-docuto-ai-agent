@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using System.Text.Json;
 
-namespace AICrawler.Agent;
+namespace Docuto.Agent.Service;
 
 public class ManifestService
 {

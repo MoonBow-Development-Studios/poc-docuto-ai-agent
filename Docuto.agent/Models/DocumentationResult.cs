@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace AICrawler.Agent;
+namespace Docuto.Agent.Models;
 
 public class DocumentationResult
 {

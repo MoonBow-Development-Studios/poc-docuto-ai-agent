@@ -1,7 +1,9 @@
 using System.Text.Json;
+using AICrawler.Agent;
+using Docuto.Agent.Models;
 using OpenAI.Chat;
 
-namespace AICrawler.Agent;
+namespace Docuto.Agent.AI;
 
 public interface IAgent
 {

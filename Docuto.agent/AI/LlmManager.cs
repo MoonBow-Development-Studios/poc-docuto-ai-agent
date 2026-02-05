@@ -1,6 +1,6 @@
 using OpenAI.Chat;
 
-namespace AICrawler.Agent;
+namespace Docuto.Agent.AI;
 
 public interface ILlmManager
 {
