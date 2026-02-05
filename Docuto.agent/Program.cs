@@ -3,7 +3,9 @@ using Microsoft.Extensions.Configuration;
 
 var config = new ConfigurationBuilder()
     .SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json", optional: false)
+    .AddJsonFile("appsettings.json", optional: false) // main config
+    .AddJsonFile("appsettings.local.json", optional: true) // optional local override
+    .AddCommandLine(args) // CLI args override everything
     .Build();
 
 var projectFolder = config["projectPath"] 

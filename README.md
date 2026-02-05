@@ -30,6 +30,14 @@ cp Docuto.Agent/appsettings.json.example Docuto.Agent/appsettings.json
 }
 ```
 
+You can also use `appsettings.local.json` for local overrides that are git-ignored.
+
+3.  **Command Line Arguments (Optional)**
+You can override any setting via the command line, which is useful for CI/CD:
+```bash
+dotnet run --project Docuto.Agent -- projectPath "/path/to/proj" openAiKey "sk-..."
+```
+
 ## Run
 ```bash
 dotnet run --project Docuto.Agent
