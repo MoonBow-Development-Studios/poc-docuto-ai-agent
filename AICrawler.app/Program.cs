@@ -34,9 +34,9 @@ if (!dirInfoFiles.Any())
 var filesToProcess = await GetProjectFilesToProcessAsync(projectFolder, agent);
 
 foreach (var relativePath in filesToProcess)
-{
+{ 
     var fullPath = Path.Combine(projectFolder, relativePath);
-
+    
     var doc = await agent.GenerateDocumentation(fullPath);
 
     await DocumentationService.SaveAsync(doc, projectFolder);
@@ -48,35 +48,38 @@ async Task<HashSet<string>> GetProjectFilesToProcessAsync(string root, Agent doc
 {
     var ignore = ReadDocUtilityFile(Path.Combine(root, ".docignore"));
     var whitelist = ReadDocUtilityFile(Path.Combine(root, ".docwhitelist"));
+    HashSet<string> files;
 
     // whitelist overrides everything
     if (whitelist is { Count: > 0 })
     {
-        return whitelist;
+        files = whitelist;
     }
-
     // apply ignore
-    if (ignore is { Count: > 0 })
+    else if (ignore is { Count: > 0 })
     {
-        return Directory
+        files = Directory
             .EnumerateFiles(root, "*.*", SearchOption.AllDirectories)
             .Select(path => Path.GetRelativePath(root, path))
             .Where(path => !IsIgnored(path, ignore))
             .ToHashSet();
     }
-
-    var excludeFolders = new HashSet<string>
+    else
     {
-        "bin","obj",".git",".vs","node_modules","vendor",
-        "packages","dist","build","out",".idea",".vscode",
-        "storage","cache"
-    };
+        var excludeFolders = new HashSet<string>
+        {
+            "bin","obj",".git",".vs","node_modules","vendor",
+            "packages","dist","build","out",".idea",".vscode",
+            "storage","cache"
+        };
 
-    var files = Directory
-        .EnumerateFiles(root, "*.*", SearchOption.AllDirectories)
-        .Where(path => !IsInExcludedFolder(path, excludeFolders))
-        .Select(path => Path.GetRelativePath(root, path))
-        .ToHashSet();
+        files = Directory
+            .EnumerateFiles(root, "*.*", SearchOption.AllDirectories)
+            .Where(path => !IsInExcludedFolder(path, excludeFolders))
+            .Select(path => Path.GetRelativePath(root, path))
+            .ToHashSet();
+    }
+    
     // let AI decide ones actually matter
     return await docAgent.DecideFilesToProcess(files);
 }
