@@ -18,9 +18,9 @@ public class Agent : IAgent
         PropertyNameCaseInsensitive = true
     };
 
-    public Agent(string key)
+    public Agent(string key, string? model = null)
     {
-        var llm = new LlmManager(key);
+        var llm = new LlmManager(key, model);
         _client = llm.GetChatClient();
     }
 

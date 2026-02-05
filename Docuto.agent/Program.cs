@@ -12,7 +12,9 @@ var projectFolder = config["projectPath"]
 var key = config["openAiKey"]
           ?? throw new Exception("openAiKey missing in config");
 
-var agent = new Agent(key);
+var model = config["model"];
+
+var agent = new Agent(key, model);
 
 var dirInfo = new DirectoryInfo(projectFolder);
 

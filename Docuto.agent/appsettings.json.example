@@ -1,4 +1,5 @@
 {
   "openAiKey": "",
   "projectPath": "",
+  "model": "gpt-5.1"
 }
