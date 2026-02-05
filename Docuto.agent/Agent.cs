@@ -1,8 +1,7 @@
 using System.Text.Json;
-using AICrawler.app;
 using OpenAI.Chat;
 
-namespace AICrawler.App;
+namespace AICrawler.Agent;
 
 public interface IAgent
 {
@@ -36,6 +35,7 @@ public class Agent : IAgent
         var result = await _client.CompleteChatAsync(messages);
 
         var raw = CleanJson(result.Value.Content[0].Text);
+        //var raw = "[ \"README.md\", \"composer.json\", \"config/app.php\", \"config/database.php\", \"routes/web.php\", \"app/Providers/AppServiceProvider.php\", \"app/Http/Controllers/IndexController.php\", \"app/Http/Controllers/UrlController.php\", \"app/Http/Controllers/ShopController.php\", \"app/Http/Controllers/StatisticController.php\", \"app/Models/User.php\", \"app/Models/Shop.php\", \"app/Models/Url.php\", \"app/Models/Statistic.php\", \"app/Jobs/DetermineStatisticsCountries.php\" ]";
 
         return JsonSerializer.Deserialize<HashSet<string>>(raw, JsonOptions)
                ?? [];

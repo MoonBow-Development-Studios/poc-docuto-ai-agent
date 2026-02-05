@@ -1,4 +1,4 @@
-namespace AICrawler.app;
+namespace AICrawler.Agent;
 
 public static class DocumentationService
 {

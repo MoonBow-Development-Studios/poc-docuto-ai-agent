@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace AICrawler.app;
+namespace AICrawler.Agent;
 
 public class DocumentationResult
 {

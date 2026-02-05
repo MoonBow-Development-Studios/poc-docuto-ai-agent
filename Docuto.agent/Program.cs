@@ -1,5 +1,4 @@
-﻿using AICrawler.app;
-using AICrawler.App;
+﻿using AICrawler.Agent;
 using Microsoft.Extensions.Configuration;
 
 var config = new ConfigurationBuilder()

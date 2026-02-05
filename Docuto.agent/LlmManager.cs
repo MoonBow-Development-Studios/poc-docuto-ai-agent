@@ -1,6 +1,6 @@
 using OpenAI.Chat;
 
-namespace AICrawler.app;
+namespace AICrawler.Agent;
 
 public interface ILlmManager
 {
